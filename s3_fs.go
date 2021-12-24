@@ -162,7 +162,7 @@ func (fs *Fs) OpenFile(name string, flag int, _ os.FileMode) (afero.File, error)
 func (fs Fs) Remove(name string) error {
 	if fi, err := fs.Stat(name); err != nil {
 		return err
-	}else{
+	} else {
 		if fi.IsDir() {
 			name += "/"
 		}
@@ -181,13 +181,13 @@ func (fs Fs) forceRemove(name string) error {
 
 // RemoveAll removes a path.
 func (fs *Fs) RemoveAll(name string) error {
-	s3dir := NewFile(fs, name)
-	fis, err := s3dir.Readdir(0)
+	s3file := NewFile(fs, name)
+	fis, err := s3file.Readdir(0)
 	if err != nil {
 		return err
 	}
 	for _, fi := range fis {
-		fullpath := path.Join(s3dir.Name(), fi.Name())
+		fullpath := path.Join(s3file.Name(), fi.Name())
 		if fi.IsDir() {
 			if err := fs.RemoveAll(fullpath); err != nil {
 				return err
@@ -199,7 +199,16 @@ func (fs *Fs) RemoveAll(name string) error {
 		}
 	}
 	// finally remove the "file" representing the directory
-	if err := fs.forceRemove(s3dir.Name() + "/"); err != nil {
+	s3fi, err := s3file.Stat()
+	if err != nil {
+		return err
+	}
+	if !s3fi.IsDir() {
+		if err := fs.forceRemove(s3file.Name()); err != nil {
+			return err
+		}
+	}
+	if err := fs.forceRemove(s3file.Name() + "/"); err != nil {
 		return err
 	}
 	return nil
