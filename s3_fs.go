@@ -160,8 +160,12 @@ func (fs *Fs) OpenFile(name string, flag int, _ os.FileMode) (afero.File, error)
 
 // Remove a file
 func (fs Fs) Remove(name string) error {
-	if _, err := fs.Stat(name); err != nil {
+	if fi, err := fs.Stat(name); err != nil {
 		return err
+	}else{
+		if fi.IsDir() {
+			name += "/"
+		}
 	}
 	return fs.forceRemove(name)
 }
@@ -246,7 +250,7 @@ func (fs Fs) Stat(name string) (os.FileInfo, error) {
 		}
 	} else if strings.HasSuffix(name, "/") {
 		// user asked for a directory, but this is a file
-		return FileInfo{name: name}, nil
+		return fs.statDirectory(name)
 		/*
 			return FileInfo{}, &os.PathError{
 				Op:   "stat",
