@@ -1,4 +1,4 @@
-module github.com/fclairamb/afero-s3
+module github.com/nxsre/afero-s3
 
 go 1.15
 
